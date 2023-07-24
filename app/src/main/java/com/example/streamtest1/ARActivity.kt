@@ -200,8 +200,8 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
 
     @RequiresApi(Build.VERSION_CODES.S)
     private fun initialize() {
-//        initializeDeepAR()
-//        initializeFilters()
+        initializeDeepAR()
+        initializeFilters()
         initializeViews()
 //        executeMediaProjection()
     }
