@@ -529,9 +529,9 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
         val recordModeBtn = findViewById<TextView>(R.id.recordModeButton)
         recordModeBtn.background.alpha = 0x00
         screenShotModeButton.background.alpha = 0x00
-//        recordModeBtn.setOnClickListener(View.OnClickListener { this@ARActivity.startStreaming2() })
-        recordModeBtn.setOnClickListener(View.OnClickListener { this@ARActivity.startStreamingPipe() })
-//        screenShotModeButton.setOnClickListener(View.OnClickListener { this@ARActivity.startFF() })
+        recordModeBtn.setOnClickListener(View.OnClickListener { this@ARActivity.startStreaming2() })
+//        recordModeBtn.setOnClickListener(View.OnClickListener { this@ARActivity.startStreamingPipe() })
+        screenShotModeButton.setOnClickListener(View.OnClickListener { this@ARActivity.startFF() })
 //        screenShotModeButton.setOnClickListener(View.OnClickListener {
 //            if (currentSwitchRecording) {
 //                if (recording) {
@@ -709,7 +709,7 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
                     .DIRECTORY_DOWNLOADS
             )
         try {
-            testvid = File.createTempFile("videotest", ".h264", dir)
+            testvid = File.createTempFile("videotest", ".mp4", dir)
         } catch (e: IOException) {
             Log.d("aa", "external storage access error")
             e.printStackTrace()
@@ -794,6 +794,8 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
         // Create MediaFormat for the encoder
         // Execute FFmpeg command to stream the encoded frames to the RTMP server
 //        val command = "-f rawvideo -pixel_format yuv420p -video_size ${frameWidth}x${frameHeight} -i - -c:v libx264 -preset ultrafast -tune zerolatency -f flv rtmp://your-rtmp-server-url/live/stream-key" // Replace with your RTMP server URL and stream key
+//        val command = "-f ${testvid.absolutePath} -pixel_format yuv420p -video_size ${frameWidth}x${frameHeight} -i - -c:v libx264 -preset ultrafast -tune zerolatency -f flv rtmp://192.168.0.119/live/livestream" // Replace with your RTMP server URL and stream key
+//        FFmpegKit.execute(command)
 
         // Create a separate thread for encoding and streaming
 //        val encodingThread = Thread {
@@ -917,7 +919,7 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
 
             // FAILURE
             Log.d("aaaa", String.format("Command failed with state %s and rc %s.%s", session.state, session.returnCode, session.failStackTrace));
-//            testvid.delete()
+            testvid.delete()
 //            testoutput.delete()
         }
 
@@ -1034,11 +1036,16 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
     }
 
     protected fun startFF(){
-//        mediaRecorder.stop();
-//        mediaRecorder.reset();   // You can reuse the object by going back to setAudioSource() step
-//        mediaRecorder.release();
+        mediaRecorder.stop();
+        mediaRecorder.reset();   // You can reuse the object by going back to setAudioSource() step
+        mediaRecorder.release();
 
-        val cmd = "-re -i - -movflags isml+frag_keyframe -c:v copy -c:a copy -f flv -y rtmp://192.168.1.2/live/livestream"
+        val displayMetrics = resources.displayMetrics
+        val frameWidth = displayMetrics.widthPixels
+        val frameHeight = 2722
+
+        val cmd = "-i ${testvid.absolutePath} -pixel_format yuv420p -video_size ${frameWidth}x${frameHeight}  -c:v libx264 -preset ultrafast -tune zerolatency -f flv rtmp://192.168.0.119/live/livestream" // Replace with your RTMP server URL and stream key
+//        val cmd = "-re -i - -movflags isml+frag_keyframe -c:v copy -c:a copy -f flv -y rtmp://192.168.1.2/live/livestream"
 //        val cmd = "-i - -c:v copy -c:a copy -f flv -y -movflags faststart ${testoutput.absolutePath} "
         val session : FFmpegSession = FFmpegKit.execute(cmd);
         ffmpegsessionid = session.sessionId
@@ -1055,9 +1062,12 @@ class ARActivity : AppCompatActivity(), SurfaceHolder.Callback ,AREventListener 
             // FAILURE
             Log.d("aaaa", String.format("Command failed with state %s and rc %s.%s", session.getState(), session.getReturnCode(), session.getFailStackTrace()));
             testvid.delete()
-            testoutput.delete()
+//            testoutput.delete()
         }
+
+
     }
+
     var ffmpegsessionid : Long = -1;
     protected fun startStreaming3() {
         if (!currentSwitchRecording) {
